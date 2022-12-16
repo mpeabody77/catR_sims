@@ -4,23 +4,72 @@ format: html
 editor: visual
 ---
 
-## Quarto
+## Initial Set up
 
-Quarto enables you to weave together content and executable code into a finished document. To learn more about Quarto see <https://quarto.org>.
-
-## Running Code
-
-When you click the **Render** button a document will be generated that includes both content and the output of embedded code. You can embed code like this:
+The following section describes the initial set up for creating an item bank for use in a simulation using the **catR** package.
 
 ```{r}
-1 + 1
+library(catR)
 ```
 
-You can add options to executable code like this
+Computerized adaptive tests (CAT) require a pre-calibrated item bank. Let's create a small bank of 5 questions to illustrate how the items need to look.
+
+```{r warning = FALSE}
+
+
+a <- c(0.8, 0.9, 1.0, 1.1, 1,2)
+b <- c(0.0, -0.5, 1.1, -0.8, 0.7)
+it.2PL <- cbind(a, b, c = 0, d = 1)
+
+it.2PL
+```
+
+### Simulating a bank
+
+You can simulate a larger item bank based on distributional properties using the `genDichoMatrix()` function. Continuing with our example of 5 items, let's make a 3PL item bank.
 
 ```{r}
-#| echo: false
-2 * 2
+
+library(catR)
+
+genDichoMatrix(items = 5, 
+               model = "3PL",
+               aPrior = c("lnorm", 0, 0.12), 
+               bPrior = c("norm", 0, 1),
+               cPrior = c("beta", 5, 17), 
+               seed = 1)
+
 ```
 
-The `echo: false` option disables the printing of code (only output is displayed).
+In order to all content balancing, we need to use the argument for `cbControl` and specify the names of the content categories and the proportions of each in the bank.
+
+```{r}
+
+genDichoMatrix(items = 5, 
+               model = "3PL",
+               aPrior = c("lnorm", 0, 0.12), 
+               bPrior = c("norm", 0, 1),
+               cPrior = c("beta", 5, 17), 
+               seed = 1,
+               cbControl = list(
+                 names = c("a", "b", "c"),
+                 props = c(0.2, 0.4, 0.4) 
+                 )
+               )
+```
+
+### Simulate person data
+
+In order to create simulated response data, true ability levels must be available in a vector. These can either be done inside the simulation or externally.
+
+The `genPattern()` function then takes the bank of item parameters and true abilities to create a matrix of person responses. The argument `th` is the vector of true thetas and the argument `it` is the simulated item bank.
+
+```{r}
+genPattern(th = seq(-2, 2, length = 10),
+           it = it.2PL)
+```
+
+## IRT scoring
+
+
+
